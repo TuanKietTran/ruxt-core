@@ -15,6 +15,7 @@
     "cqrs.ts"
   ],
   "exports": {
+    "./package.json": "./package.json",
     "./cqrs": "./cqrs.ts",
     "./analytics/*": "./analytics/*.ts",
     "./domain/*": "./domain/*/index.ts",

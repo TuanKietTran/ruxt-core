@@ -1,0 +1,11 @@
+node_modules
+.pnpm-store
+*.tgz
+.nuxt
+.output
+dist
+coverage
+*.log
+.DS_Store
+.idea
+.fleet
