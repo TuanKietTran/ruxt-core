@@ -1,9 +1,10 @@
 import { onBeforeUnmount, onMounted, shallowRef, toValue, watch } from "vue";
 import type { MaybeRefOrGetter, ShallowRef } from "vue";
-import { Compartment, EditorState, Transaction } from "@codemirror/state";
+import { Compartment, EditorState, StateEffect, StateField, Transaction } from "@codemirror/state";
 import type { Extension, Range } from "@codemirror/state";
 import {
     Decoration,
+    type DecorationSet,
     EditorView,
     ViewPlugin,
     highlightActiveLine,
@@ -34,10 +35,20 @@ export interface EditorStats {
     words: number;
 }
 
+/** A source range marked by the host, e.g. a detected profile value. */
+export interface CodeMirrorHighlight {
+    from: number;
+    to: number;
+    /** Extra classes on the mark; `cm-source-highlight` is always applied. */
+    class?: string;
+    title?: string;
+}
+
 export interface UseCodeMirrorOptions {
     initialDoc: MaybeRefOrGetter<string>;
     language?: MaybeRefOrGetter<CodeMirrorLanguage>;
     readOnly?: MaybeRefOrGetter<boolean>;
+    highlights?: MaybeRefOrGetter<readonly CodeMirrorHighlight[] | undefined>;
     onChange?: (state: EditorState) => void;
     onStatsChange?: (stats: EditorStats) => void;
 }
@@ -48,6 +59,7 @@ export interface UseCodeMirrorResult<T extends HTMLElement> {
     setDocument: (document: string) => void;
     applyMarkdownFormat: (format: MarkdownFormat) => void;
     focus: () => void;
+    revealRange: (from: number, to?: number) => void;
 }
 
 export const transparentTheme = EditorView.theme({
@@ -93,6 +105,32 @@ const markdownIndicators = ViewPlugin.fromClass(class {
         if (update.docChanged || update.viewportChanged) this.decorations = markdownIndicatorDecorations(update.view);
     }
 }, { decorations: value => value.decorations });
+
+const setSourceHighlights = StateEffect.define<readonly CodeMirrorHighlight[]>();
+
+const buildSourceHighlights = (highlights: readonly CodeMirrorHighlight[], length: number): DecorationSet =>
+    Decoration.set(
+        highlights
+            .filter(highlight => highlight.from >= 0 && highlight.from < highlight.to && highlight.to <= length)
+            .map(highlight => Decoration.mark({
+                class: highlight.class ? `cm-source-highlight ${highlight.class}` : "cm-source-highlight",
+                attributes: highlight.title ? { title: highlight.title } : undefined,
+            }).range(highlight.from, highlight.to)),
+        true,
+    );
+
+// Host highlights follow edits until the host replaces them.
+const sourceHighlights = StateField.define<DecorationSet>({
+    create: () => Decoration.none,
+    update(value, transaction) {
+        let next = value.map(transaction.changes);
+        for (const effect of transaction.effects) {
+            if (effect.is(setSourceHighlights)) next = buildSourceHighlights(effect.value, transaction.state.doc.length);
+        }
+        return next;
+    },
+    provide: field => EditorView.decorations.from(field),
+});
 
 const languageExtensions = (language: CodeMirrorLanguage): Extension =>
     language === "css"
@@ -143,9 +181,28 @@ export function useCodeMirror<T extends HTMLElement = HTMLDivElement>(
         } finally {
             settingDocument = false;
         }
+        // A full replacement collapses mapped highlights; re-apply them to the new text.
+        applyHighlights();
     };
 
     const focus = () => view.value?.focus();
+
+    const applyHighlights = () => {
+        view.value?.dispatch({ effects: setSourceHighlights.of(toValue(options.highlights) ?? []) });
+    };
+
+    const revealRange = (from: number, to = from) => {
+        const currentView = view.value;
+        if (!currentView) return;
+        const length = currentView.state.doc.length;
+        const anchor = Math.min(Math.max(0, from), length);
+        const head = Math.min(Math.max(anchor, to), length);
+        currentView.dispatch({
+            selection: { anchor, head },
+            effects: EditorView.scrollIntoView(anchor, { y: "center" }),
+        });
+        currentView.focus();
+    };
 
     const applyMarkdownFormat = (format: MarkdownFormat) => {
         const currentView = view.value;
@@ -215,6 +272,7 @@ export function useCodeMirror<T extends HTMLElement = HTMLDivElement>(
                 transparentTheme,
                 EditorView.lineWrapping,
                 markdownIndicators,
+                sourceHighlights,
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged && !settingDocument) options.onChange?.(update.state);
                     if (update.docChanged || update.selectionSet) reportStats(update.state);
@@ -227,7 +285,10 @@ export function useCodeMirror<T extends HTMLElement = HTMLDivElement>(
             parent: container.value,
         });
         reportStats(view.value.state);
+        applyHighlights();
     });
+
+    watch(() => toValue(options.highlights), applyHighlights);
 
     watch(
         () => toValue(options.initialDoc),
@@ -264,7 +325,7 @@ export function useCodeMirror<T extends HTMLElement = HTMLDivElement>(
         view.value = undefined;
     });
 
-    return { container, view, setDocument, applyMarkdownFormat, focus };
+    return { container, view, setDocument, applyMarkdownFormat, focus, revealRange };
 }
 
 export default useCodeMirror;

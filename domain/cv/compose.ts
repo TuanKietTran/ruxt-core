@@ -27,7 +27,7 @@ interface SectionShape {
 const HEADING = /^(#{1,6})\s+(.*?)\s*$/;
 const LIST_ITEM = /^(\s*(?:[-*+]|\d+[.)])\s+)(.*)$/;
 const TABLE_ROW = /^\s*\|.*\|\s*$/;
-const TABLE_SEPARATOR = /^\s*\|?(?:\s*:?-{2,}:?\s*\|)+\s*(?::?-{2,}:?\s*)?\|?\s*$/;
+const TABLE_SEPARATOR = /^\s*\|?(?:\s*:?-+:?\s*\|)+\s*(?::?-+:?\s*)?\|?\s*$/;
 const DIRECTIVE = /^\s*:{3,}/;
 const THEMATIC_BREAK = /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/;
 const FENCE = /^\s*(?:`{3,}|~{3,})/;

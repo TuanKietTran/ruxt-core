@@ -6,3 +6,4 @@ export * from "./application";
 export * from "./version";
 export * from "./split";
 export * from "./compose";
+export * from "./detect";
