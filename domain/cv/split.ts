@@ -39,12 +39,16 @@ const ATTRIBUTES = /\s*\{[^{}]+\}\s*$/;
 const HEADING = /^(#{1,6})\s+(.*?)\s*$/;
 const LIST_ITEM = /^(\s*(?:[-*+]|\d+[.)])\s+)(.*)$/;
 const TABLE_ROW = /^\s*\|.*\|\s*$/;
-const TABLE_SEPARATOR = /^\s*\|?(?:\s*:?-{2,}:?\s*\|)+\s*(?::?-{2,}:?\s*)?\|?\s*$/;
+const TABLE_SEPARATOR = /^\s*\|?(?:\s*:?-+:?\s*\|)+\s*(?::?-+:?\s*)?\|?\s*$/;
 const DIRECTIVE = /^\s*:{3,}/;
 const THEMATIC_BREAK = /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/;
 const FENCE = /^\s*(?:`{3,}|~{3,})/;
 const EMPHASIS = /^(\*\*|\*|_)(\S(?:.*\S)?)\1$/;
 const LABELLED = /^\*\*([^*]+?)(?::\*\*|\*\*:)\s*(.*)$/;
+// `**Languages** &nbsp; C#, Rust`: a bold label separated by spacing instead of a colon.
+const BOLD_LABEL = /^\*\*([^*]+?)\*\*(?:\s|&nbsp;|&#160;)+(\S.*)$/i;
+const ITALIC_ONLY = /^(\*|_)(?!\1)(\S(?:.*\S)?)\1$/;
+const TRAILING_SEPARATOR = /\s*[·•|]\s*$/;
 const LABEL_PREFIX = /^([A-Z][\w &/-]{1,40}):\s+\S/;
 const TOKEN_SEPARATOR = /\s+[·•|]\s+/;
 const ENTRY_TITLE_SEPARATOR = /\s+(?:—|–|\||@|at)\s+/i;
@@ -84,6 +88,8 @@ export function plainCvText(text: string): string {
       .replace(/\*\*|__|`/g, "")
       .replace(/(^|[\s(])[*_](\S(?:[^*_]*\S)?)[*_](?=$|[\s),.;:])/g, "$1$2")
       .replace(/\\([\\`*_{}[\]()#+\-.!|])/g, "$1")
+      .replace(/&nbsp;|&#160;/gi, " ")
+      .replace(/&(amp|lt|gt|quot|#39);/g, (_, name: string) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" })[name]!)
       .replace(/\s+/g, " ")
       .trim();
 }
@@ -193,7 +199,8 @@ export function extractCvProfile(markdown: string): CvProfileProps {
    };
 
    const addSkills = (text: string) => {
-      const labelled = stripAttributes(text).trim().match(LABELLED);
+      const body = stripAttributes(text).trim();
+      const labelled = body.match(LABELLED) ?? body.match(BOLD_LABEL);
       if (labelled) {
          const name = plainCvText(labelled[1]!);
          const items = splitItems(labelled[2]!);
@@ -209,7 +216,7 @@ export function extractCvProfile(markdown: string): CvProfileProps {
    };
 
    const addHeaderLine = (line: string) => {
-      const body = stripAttributes(line).trim();
+      const body = stripAttributes(line).trim().replace(TRAILING_SEPARATOR, "");
       if (!body) return;
       const tokens = body.split(TOKEN_SEPARATOR).filter(Boolean);
       const contacts = tokens.map(classifyCvContact);
@@ -234,16 +241,30 @@ export function extractCvProfile(markdown: string): CvProfileProps {
    const addTable = (rows: string[][]) => {
       const [head = [], sub = []] = rows;
       const [first = "", second = ""] = head;
-      const [third = "", fourth = ""] = sub;
-      const secondIsDate = DATE_LIKE.test(plainCvText(second));
-      const place = plainCvText(secondIsDate ? fourth : second);
-      const dates = splitDates(secondIsDate ? second : fourth);
+      const [third = ""] = sub;
+      const headText = head.map(plainCvText);
+      const subText = sub.map(plainCvText);
+      const isDate = (text: string) => DATE_LIKE.test(text) && text.length <= 40;
+      // Any column after the first may hold the dates; the rest is place or detail.
+      const dateIn = (cells: string[]) => cells.slice(1).find(isDate) ?? "";
+      const placeIn = (cells: string[]) => cells.slice(1).reverse().find(text => text && !isDate(text)) ?? "";
+      const headDate = dateIn(headText);
+      const dates = splitDates(headDate || dateIn(subText));
+      const place = headDate ? placeIn(subText) : placeIn(headText);
+      const details = subText.slice(1).filter(text => text && !isDate(text) && text !== place).join(" · ");
       switch (section) {
-         case "experience":
+         case "experience": {
+            // `| *Role* | dates |` under a company table is another role at that company.
+            const previous = profile.experiences.at(-1);
+            if (!sub.length && previous?.company && ITALIC_ONLY.test(stripAttributes(first).trim())) {
+               Object.assign(currentExperience(true), { company: previous.company, title: plainCvText(first), location: previous.location, ...dates });
+               break;
+            }
             Object.assign(currentExperience(true), { company: plainCvText(first), title: plainCvText(third), location: place, ...dates });
             break;
+         }
          case "education":
-            Object.assign(currentEducation(true), { school: plainCvText(first), degree: plainCvText(third), location: place, ...dates });
+            Object.assign(currentEducation(true), { school: plainCvText(first), degree: plainCvText(third), location: place, ...dates, details });
             break;
          case "projects":
             Object.assign(currentProject(true), {

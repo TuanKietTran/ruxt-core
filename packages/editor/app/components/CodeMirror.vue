@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toRef } from "vue";
 import { useCodeMirror } from "../composables/useCodeMirror";
-import type { CodeMirrorLanguage, EditorStats } from "../composables/useCodeMirror";
+import type { CodeMirrorHighlight, CodeMirrorLanguage, EditorStats } from "../composables/useCodeMirror";
 
 const props = withDefaults(
     defineProps<{
@@ -9,6 +9,7 @@ const props = withDefaults(
         language?: CodeMirrorLanguage;
         readOnly?: boolean;
         showIndicators?: boolean;
+        highlights?: readonly CodeMirrorHighlight[];
     }>(),
     {
         language: "markdown",
@@ -22,15 +23,16 @@ const emit = defineEmits<{
     "update:stats": [stats: EditorStats];
 }>();
 
-const { container, applyMarkdownFormat, focus } = useCodeMirror({
+const { container, applyMarkdownFormat, focus, revealRange } = useCodeMirror({
     initialDoc: toRef(props, "modelValue"),
     language: toRef(props, "language"),
     readOnly: toRef(props, "readOnly"),
+    highlights: toRef(props, "highlights"),
     onChange: (state) => emit("update:modelValue", state.doc.toString()),
     onStatsChange: (stats) => emit("update:stats", stats),
 });
 
-defineExpose({ applyMarkdownFormat, focus });
+defineExpose({ applyMarkdownFormat, focus, revealRange });
 </script>
 
 <template>
@@ -61,6 +63,17 @@ defineExpose({ applyMarkdownFormat, focus });
 
 .code-mirror--hide-indicators :deep(.cm-markdown-indicator) {
     visibility: hidden;
+}
+
+.code-mirror :deep(.cm-source-highlight) {
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--highlight-color, var(--accent, #89b4fa)) 22%, transparent);
+    box-shadow: inset 0 -1px 0 var(--highlight-color, var(--accent, #89b4fa));
+}
+
+.code-mirror :deep(.cm-source-highlight--active) {
+    background: color-mix(in srgb, var(--highlight-color, var(--accent, #89b4fa)) 45%, transparent);
+    outline: 1px solid var(--highlight-color, var(--accent, #89b4fa));
 }
 
 .code-mirror :deep(.cm-scroller) {

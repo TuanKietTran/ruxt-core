@@ -29,4 +29,6 @@ For a sibling app, resolve the layer's repository path. `CodeMirror` and `CodePr
 import type { EditorStats } from "@ruxt/editor/composables/useCodeMirror"
 ```
 
+`CodeMirror` takes an optional `highlights` prop (`CodeMirrorHighlight[]`: `from`, `to`, extra `class`, `title`) that marks source ranges; the marks follow edits until the host passes new ones. Set `--highlight-color` through the extra class to colour them. The exposed `revealRange(from, to)` selects a range and scrolls it into view.
+
 Keep product-specific workspaces in their respective applications and compose these primitives there.
