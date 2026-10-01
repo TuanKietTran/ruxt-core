@@ -1,6 +1,6 @@
 import { createHandler, useMediator } from "../cqrs";
 import type { CvPipelineCapabilities } from "../domain/cv/import";
-import type { CvExtractor } from "../ports/cv-extractor";
+import type { CvExtractor } from "./extract-cv";
 
 export function getCvCapabilitiesQuery() {
    return { _type: "query" as const, requestName: "GetCvCapabilities", payload: undefined };

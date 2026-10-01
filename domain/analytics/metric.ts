@@ -9,7 +9,8 @@ export interface MetricStat {
 
 export type MetricBucket = Record<string, MetricStat>;
 /** routes: HTTP route shapes; cqrs: mediator requests; users: owner ids; tasks: Nitro tasks. */
-export type MetricKind = "routes" | "cqrs" | "users" | "tasks";
+export const METRIC_KINDS = ["routes", "cqrs", "users", "tasks"] as const;
+export type MetricKind = (typeof METRIC_KINDS)[number];
 
 export interface MetricSample {
    durationMs: number;
@@ -42,8 +43,6 @@ export function hourKey(at: Date | number): string {
 export function recentHourKeys(hours: number, now = Date.now()): string[] {
    return Array.from({ length: hours }, (_, index) => hourKey(now - index * HOUR_MS));
 }
-
-export const metricStorageKey = (kind: MetricKind, hour: string) => `${kind}:${hour}`;
 
 function isDynamicSegment(raw: string): boolean {
    let segment = raw;
@@ -116,26 +115,4 @@ export function hourlyTotals(entries: Array<{ hour: string; bucket: MetricBucket
          };
       })
       .sort((left, right) => left.hour.localeCompare(right.hour));
-}
-
-/** In-process accumulator; producers drain it periodically into shared storage. */
-export class MetricsRecorder {
-   private pending = new Map<string, { kind: MetricKind; hour: string; bucket: MetricBucket }>();
-
-   record(kind: MetricKind, key: string, sample: MetricSample, at: number = Date.now()): void {
-      const hour = hourKey(at);
-      const id = metricStorageKey(kind, hour);
-      let entry = this.pending.get(id);
-      if (!entry) {
-         entry = { kind, hour, bucket: {} };
-         this.pending.set(id, entry);
-      }
-      recordSample(entry.bucket, key, sample);
-   }
-
-   drain(): Array<{ kind: MetricKind; hour: string; bucket: MetricBucket }> {
-      const entries = [...this.pending.values()];
-      this.pending.clear();
-      return entries;
-   }
 }

@@ -1,7 +1,7 @@
 import { createHandler, useMediator } from "../cqrs";
 import { CvImportJob } from "../domain/cv/import";
 import type { CvImportRepository } from "../repos/cv-import.repo";
-import { requireCvImport } from "../services/cv-import-support";
+import { requireCvImport } from "./get-cv-import";
 
 export function retryCvImportCommand(input: { id: string; ownerId: string }) {
    return { _type: "command" as const, requestName: "RetryCvImport", payload: input };

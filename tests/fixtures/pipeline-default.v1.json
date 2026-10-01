@@ -1,0 +1,17 @@
+{
+  "id": "pipeline-default",
+  "version": 1,
+  "name": "CV Pipeline Default",
+  "markdownSkeleton": "# {{fullName}}\n\n{{content}}\n",
+  "css": "/* CV lookalike template — print-safe, single page friendly */\n:root {\n  --ink: #1b2430;\n  --muted: #5b6573;\n  --line: #d7dde6;\n  --accent: #0f4c5c;\n  --paper: #fff;\n  --chip: #eef4f6;\n  --max: 820px;\n}\n\n* { box-sizing: border-box; }\nhtml, body { margin: 0; padding: 0; }\nbody {\n  font-family: \"Source Sans 3\", \"Segoe UI\", Helvetica, Arial, sans-serif;\n  color: var(--ink);\n  background: #e8edf2;\n  line-height: 1.45;\n}\n\n.page {\n  max-width: var(--max);\n  margin: 32px auto;\n  background: var(--paper);\n  padding: 48px 52px;\n  box-shadow: 0 10px 40px rgba(20, 30, 40, 0.08);\n}\n\nheader.mast {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px 24px;\n  border-bottom: 3px solid var(--accent);\n  padding-bottom: 16px;\n  margin-bottom: 22px;\n}\n\nheader.mast h1 {\n  margin: 0;\n  font-size: 30px;\n  letter-spacing: 0.02em;\n  font-weight: 700;\n}\n\n.headline {\n  margin: 4px 0 0;\n  color: var(--accent);\n  font-size: 15px;\n  font-weight: 600;\n}\n\n.meta {\n  text-align: right;\n  font-size: 13px;\n  color: var(--muted);\n}\n.meta a { color: var(--accent); text-decoration: none; }\n.meta a:hover { text-decoration: underline; }\n\nsection { margin: 0 0 20px; }\nsection h2 {\n  margin: 0 0 8px;\n  font-size: 12px;\n  letter-spacing: 0.14em;\n  text-transform: uppercase;\n  color: var(--accent);\n  border-bottom: 1px solid var(--line);\n  padding-bottom: 4px;\n}\n\n.summary { font-size: 14.5px; color: #2c3542; }\n\n.chips { display: flex; flex-wrap: wrap; gap: 6px; }\n.chip {\n  background: var(--chip);\n  color: var(--ink);\n  font-size: 12.5px;\n  padding: 3px 9px;\n  border-radius: 999px;\n}\n.skill-group { margin: 0 0 8px; }\n.skill-group .label {\n  font-size: 12px;\n  font-weight: 700;\n  color: var(--muted);\n  margin-bottom: 4px;\n}\n\n.job, .edu, .proj {\n  margin: 0 0 12px;\n}\n.row {\n  display: flex;\n  justify-content: space-between;\n  gap: 16px;\n  align-items: baseline;\n}\n.title { font-weight: 700; font-size: 15px; }\n.org { color: var(--accent); font-weight: 600; }\n.when, .where { color: var(--muted); font-size: 12.5px; white-space: nowrap; }\n\nul.bullets {\n  margin: 6px 0 0;\n  padding-left: 18px;\n}\nul.bullets li { margin: 0 0 3px; font-size: 13.5px; }\n\n.plain { font-size: 13.5px; color: #2c3542; }\n\nfooter.note {\n  margin-top: 28px;\n  font-size: 11px;\n  color: var(--muted);\n  border-top: 1px solid var(--line);\n  padding-top: 8px;\n}\n\n.error-page h1 { margin: 0 0 8px; font-size: 26px; }\n.error-kicker {\n  margin: 0 0 6px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  font-size: 11px;\n  color: #9b2c2c;\n  font-weight: 700;\n}\n.error-code {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;\n  font-size: 13px;\n  color: #9b2c2c;\n  background: #fdecec;\n  display: inline-block;\n  padding: 2px 8px;\n  border-radius: 4px;\n}\n\n@media print {\n  body { background: #fff; }\n  .page { margin: 0; box-shadow: none; padding: 0; max-width: none; }\n}\n",
+  "capabilities": {
+    "pageFormats": [
+      "A4"
+    ],
+    "supportsPhoto": false,
+    "atsFriendly": true
+  },
+  "builtIn": true,
+  "tags": [],
+  "createdAt": "2026-09-13T00:00:00.000Z"
+}
