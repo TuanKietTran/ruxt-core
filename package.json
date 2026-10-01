@@ -1,6 +1,6 @@
 {
   "name": "@ruxt/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Framework-free domain, CQRS, saga, and application contracts shared by Ruxt services.",
   "sideEffects": false,

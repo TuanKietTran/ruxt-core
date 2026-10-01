@@ -1,6 +1,6 @@
 {
   "name": "@ruxt/editor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Route-free Nuxt editor layer shared by Ruxt applications.",
   "private": false,
