@@ -3,7 +3,7 @@ import type { CvApplication } from "../domain/cv/application";
 import { CvRevisionConflict } from "../domain/cv/version";
 import type { CvTemplateReference } from "../domain/cv/types";
 import type { CvDocumentRecord } from "../repos/cv-document.repo";
-import { runSaga, type SagaStep } from "../services/saga";
+import { runSaga, type SagaStep } from "../saga";
 import { composeCvProfileQuery, type ComposeCvProfileOutput } from "./compose-cv-profile";
 import { getCvDocumentQuery } from "./get-cv-document";
 import { saveCvSourceCommand } from "./save-cv-source";

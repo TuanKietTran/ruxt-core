@@ -2,28 +2,24 @@
   "name": "@ruxt/core",
   "version": "0.1.0",
   "type": "module",
-  "description": "Framework-free domain, CQRS, analytics, and application contracts shared by Ruxt services.",
+  "description": "Framework-free domain, CQRS, saga, and application contracts shared by Ruxt services.",
   "sideEffects": false,
   "files": [
-    "analytics",
     "domain",
     "handlers",
-    "ports",
     "repos",
-    "services",
     "shared",
-    "cqrs.ts"
+    "cqrs.ts",
+    "saga.ts"
   ],
   "exports": {
     "./package.json": "./package.json",
     "./cqrs": "./cqrs.ts",
-    "./analytics/*": "./analytics/*.ts",
+    "./saga": "./saga.ts",
     "./domain/*": "./domain/*/index.ts",
     "./domain/cv/*": "./domain/cv/*.ts",
     "./handlers/*": "./handlers/*.ts",
-    "./ports/*": "./ports/*.ts",
     "./repos/*": "./repos/*.ts",
-    "./services/*": "./services/*.ts",
     "./shared": "./shared/index.ts",
     "./shared/*": "./shared/*.ts"
   },
@@ -32,5 +28,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "node scripts/lint-architecture.mjs"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.1"
   }
 }

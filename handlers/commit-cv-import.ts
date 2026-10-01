@@ -5,7 +5,8 @@ import type { CvDocumentPort, CvDocumentRecord } from "../repos/cv-document.repo
 import type { CvApplicationRepository } from "../repos/cv-application.repo";
 import type { CvArtifactRepository, CvImportRepository } from "../repos/cv-import.repo";
 import type { CvTemplateRepository } from "../repos/cv-template.repo";
-import { readCvArtifactText, requireCvImport } from "../services/cv-import-support";
+import { requireCvImport } from "./get-cv-import";
+import { readCvArtifactText } from "./preview-cv-import";
 
 export interface CommitCvImportInput { id: string; ownerId: string; documentId: string }
 export interface CommitCvImportOutput { application: CvApplication; document: CvDocumentRecord }
