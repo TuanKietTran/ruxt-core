@@ -1,0 +1,76 @@
+name: Publish
+
+# Publishes @ruxt/core and @ruxt/editor to npm when a release commit on main bumps a
+# package version that is not on the registry yet. A release is just the version bump.
+#
+# Security (npm supply-chain attacks spread through stolen long-lived tokens):
+# - npm Trusted Publishing over OIDC: there is no NPM_TOKEN secret anywhere; npm accepts only
+#   this workflow file, on this repository, in the `npm-publish` environment.
+# - Every publish carries a provenance attestation linking the tarball to this commit and run.
+# - Third-party actions are pinned to full commit SHAs, tags can be moved.
+# - Install runs with --frozen-lockfile and --ignore-scripts; lifecycle scripts never run here.
+# - The OIDC permission (id-token: write) exists only in the publish job, and only on main.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - packages/editor/package.json
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 11.25.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted Publishing needs npm >= 11.5.1; Node 22 ships npm 10.
+      - name: Pin npm
+        run: npm install --global --ignore-scripts npm@11.21.0
+
+      - name: Install
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Verify
+        run: |
+          pnpm test
+          pnpm lint
+
+      - name: Publish unreleased versions
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          for dir in . packages/editor; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version is already on npm; skipping."
+              continue
+            fi
+            tarball=$(pnpm --dir "$dir" pack --pack-destination "$PWD/artifacts" | tail -n 1)
+            echo "Publishing $name@$version from $tarball"
+            npm publish "$tarball" --access public --provenance
+          done

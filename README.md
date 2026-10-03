@@ -34,4 +34,8 @@ pnpm lint
 
 Applications consume pinned semver releases from the package registry rather than Git submodules or sibling-directory aliases. The initial extraction version is `0.1.0`. Publish both packages before switching Ruxt and Ruxt Admin away from their migration workspaces.
 
+Releases publish automatically. Bump `version` in `package.json` and/or `packages/editor/package.json` in a `chore: release` commit and merge it to `main`; the Publish workflow (`.github/workflows/publish.yml`) tests, lints, packs, and publishes every version that is not on npm yet, and skips the rest. It can also be re-run from the Actions tab.
+
+Publishing uses npm Trusted Publishing (OIDC) with provenance, so there is no npm token in GitHub or on any machine. One-time setup, per package on npmjs.com (Settings → Trusted publishing → GitHub Actions): organization/user `TuanKietTran`, repository `ruxt-core`, workflow `publish.yml`, environment `npm-publish`. Then, in that package's settings, set publishing access to require 2FA and disallow tokens, and revoke any old automation tokens. In GitHub, create the `npm-publish` environment and restrict it to the `main` branch; adding a required reviewer makes every publish wait for approval.
+
 No open-source license has been granted yet. The repository is publicly readable, but reuse remains subject to the repository owner's rights until a license is added explicitly.
