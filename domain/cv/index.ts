@@ -7,3 +7,4 @@ export * from "./version";
 export * from "./split";
 export * from "./compose";
 export * from "./detect";
+export * from "./session-backup";
